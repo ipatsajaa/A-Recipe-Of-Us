@@ -5,24 +5,138 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>A Recipe Of Us</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #2c3e50; font-family: 'Segoe UI', sans-serif; touch-action: none; }
+        body { margin: 0; overflow: hidden; background: #2c3e50; font-family: 'Segoe UI', serif; touch-action: none; }
         canvas { display: block; }
-        #ui { position: absolute; top: 0; width: 100%; pointer-events: none; z-index: 10; padding: 15px; box-sizing: border-box; display: flex; justify-content: space-between; color: #fff; font-weight: bold; font-size: 1.2rem; text-shadow: 2px 2px #000; }
+
+        /* Container UI Atas (s.png) */
+        #ui-container { 
+            position: absolute; 
+            top: 20px; 
+            left: 20px; 
+            display: flex; 
+            align-items: center; 
+            gap: 15px; 
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        /* Tombol Menu Bulat */
+        .menu-btn {
+            width: 55px;
+            height: 55px;
+            background-color: #6d4021; 
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            border: 4px solid #9e7540; 
+            pointer-events: auto;
+            cursor: pointer;
+            box-shadow: 0 4px 0px #4a2c16;
+        }
+        .line { width: 25px; height: 4px; background-color: #9e7540; border-radius: 2px; }
+
+        /* Papan Skor Cokelat */
+        .score-board {
+            background-color: #6d4021;
+            border: 4px solid #9e7540;
+            border-radius: 15px;
+            padding: 0 30px;
+            min-width: 160px;
+            height: 50px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            color: #9e7540; 
+            font-weight: bold;
+            font-size: 1.4rem;
+            box-shadow: 0 4px 0px #4a2c16;
+        }
+
+        /* Overlay Pause (p.png) */
+        #pause-menu {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #6d4021;
+            border: 3px solid #9e7540;
+            border-radius: 15px;
+            width: 280px;
+            padding: 25px;
+            text-align: center;
+            display: none; 
+            z-index: 2000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+        }
+
+        #pause-menu h2 {
+            color: white;
+            font-size: 3rem;
+            margin: 0 0 20px 0;
+            font-family: serif;
+        }
+
+        .close-pause {
+            position: absolute;
+            right: 20px;
+            top: 15px;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .pause-btn-container { display: flex; flex-direction: column; gap: 15px; }
+
+        .p-btn {
+            background-color: #6d4021;
+            color: white;
+            border: 2px solid #9e7540;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 1.3rem;
+            font-family: serif;
+            cursor: pointer;
+            pointer-events: auto;
+        }
+
+        .p-btn:active { transform: scale(0.95); background: #9e7540; }
+
+        /* Overlay Win/Lose */
         #overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 20px; text-align: center; width: 80%; display: none; border: 5px solid #ff4d6d; z-index: 1000; }
-        .btn { background: #ff4d6d; color: white; padding: 12px 25px; border-radius: 50px; border: none; font-weight: bold; cursor: pointer; pointer-events: auto; }
+        .btn-main { background: #ff4d6d; color: white; padding: 12px 25px; border-radius: 50px; border: none; font-weight: bold; cursor: pointer; pointer-events: auto; }
     </style>
 </head>
 <body>
 
-<div id="ui">
-    <div>⭐ <span id="score">0</span></div>
-    <div>⏱️ <span id="timer">115</span>s</div>
+<div id="ui-container">
+    <div class="menu-btn" onclick="togglePause()">
+        <div class="line"></div>
+        <div class="line"></div>
+        <div class="line"></div>
+    </div>
+    <div class="score-board">
+        <span id="score">0</span>
+        <span id="timer">115</span>
+    </div>
+</div>
+
+<div id="pause-menu">
+    <div class="close-pause" onclick="togglePause()">X</div>
+    <h2>Pause</h2>
+    <div class="pause-btn-container">
+        <button class="p-btn" onclick="alert('Music Off')">On/Of Music</button>
+        <button class="p-btn" onclick="location.reload()">Restart</button>
+        <button class="p-btn" onclick="togglePause()">Home</button>
+    </div>
 </div>
 
 <div id="overlay">
     <h2 id="msg-title">SHIFT SELESAI!</h2>
     <p id="msg-desc"></p>
-    <button class="btn" onclick="location.reload()">MAIN LAGI</button>
+    <button class="btn-main" onclick="location.reload()">MAIN LAGI</button>
 </div>
 
 <canvas id="gameCanvas"></canvas>
@@ -32,25 +146,14 @@
     const ctx = canvas.getContext('2d');
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-
     ctx.imageSmoothingEnabled = false;
 
     const imgData = {
-        bg: "img/bg.png",
-        player: "img/monyet.png",
-        customer: "img/monyet.png",
-        monkey: "img/monyet.png",
-        fridge: "img/kulkas.png",
-        dispenser: "img/kulkasminum.png",
-        kitchen_counter: "img/kitchen_counter.png",
-        stove: "img/kompor.png",
-        table: "img/meja.png",
-        trash: "img/trash.png",
-        bubble: "img/bubble.png",
-        // ITEM GAMBAR (MENGGANTIKAN EMOJI)
-        raw_mie: "img/raw.png", 
-        mie: "img/nyemek.png",
-        drink: "img/drink_item.png"
+        bg: "img/bg.png", player: "img/monyet.png", customer: "img/monyet.png",
+        monkey: "img/monyet.png", fridge: "img/kulkas.png", dispenser: "img/kulkasminum.png",
+        kitchen_counter: "img/mejadapur.png", stove: "img/kompor.png", table: "img/meja.png",
+        trash: "img/trash.png", bubble: "img/bubble.png", raw_mie: "img/raw.png", 
+        mie: "img/nyemek.png", drink: "img/es.png"
     };
 
     const images = {};
@@ -62,39 +165,59 @@
     }
 
     let score = 0, time = 115, gameActive = true, state = "idle";
-    // Orders sekarang pakai KEY gambar
-    let orders = ["mie", "drink", "mie" , "mie" , "Drink" ,]; 
+    let orders = ["mie", "drink", "mie", "mie", "drink"]; 
     let currentOrderIdx = 0;
 
-    const player = { x: canvas.width - 100, y: canvas.height - 150, speed: 0.25, stunned: 0 };
+    const player = { x: canvas.width - 100, y: canvas.height - 150, speed: 0.22, stunned: 0, radius: 30 };
     const target = { x: player.x, y: player.y };
 
-    const stations = {
-        pantry: { x: -12, y: canvas.height - 153, w: 80, h: 160, type: 'fridge' },
-        dispenser: { x: 100, y: canvas.height - 160, w: 80, h: 140, type: 'dispenser', prg: 0 },
-        cooking_area: { x: 10, y: canvas.height - 280, w: 250, h: 100, type: 'stove_area', prg: 0 },
-        table: { x: canvas.width/2 - 100, y: 140, w: 220, h: 220, type: 'table' },
-        trash: { x: canvas.width - 80, y: canvas.height - 80, w: 60, h: 70, type: 'trash' }
-    };
-
     const hazards = [
-        { x: 50, y: 350, vx: 3, w: 60, h: 60 },
-        { x: canvas.width - 100, y: 500, vx: -3, w: 60, h: 60 }
+        { x: 50, y: 380, vx: 3, w: 70, h: 70 },
+        { x: canvas.width - 100, y: 550, vx: -4, w: 70, h: 70 }
     ];
 
-    canvas.addEventListener('touchstart', (e) => {
-        if(!gameActive || player.stunned > 0) return;
-        target.x = e.touches[0].clientX;
-        target.y = e.touches[0].clientY;
-    });
+    const walls = [
+        { x: 0, y: canvas.height - 150, w: 80, h: 150 }, 
+        { x: 0, y: canvas.height - 250, w: 260, h: 15 },
+        { x: canvas.width - 60, y: canvas.height - 70, w: 60, h: 70 }
+    ];
+
+    const stations = {
+        pantry: { x: -12, y: canvas.height - 153, w: 80, h: 160 },
+        dispenser: { x: 84, y: canvas.height - 135, w: 80, h: 140, prg: 0 },
+        cooking_area: { x: -23, y: canvas.height - 320, w: 325, h: 225, prg: 0 },
+        table: { x: canvas.width/2 - 100, y: 140, w: 220, h: 220 },
+        trash: { x: canvas.width - 80, y: canvas.height - 80, w: 80, h: 90 }
+    };
+
+    canvas.addEventListener('touchstart', (e) => { if(!gameActive || player.stunned > 0) return; updateTarget(e.touches[0]); });
+    canvas.addEventListener('touchmove', (e) => { if(gameActive && player.stunned <= 0) updateTarget(e.touches[0]); });
+
+    function updateTarget(touch) { target.x = touch.clientX; target.y = touch.clientY; }
+
+    function togglePause() {
+        gameActive = !gameActive;
+        document.getElementById('pause-menu').style.display = gameActive ? "none" : "block";
+        if(gameActive) requestAnimationFrame(update);
+    }
 
     function update() {
         if (!gameActive) return;
-        if (player.stunned > 0) player.stunned--;
-        else {
-            player.x += (target.x - player.x) * player.speed;
-            player.y += (target.y - player.y) * player.speed;
+        if (player.stunned > 0) { player.stunned--; } else {
+            let nextX = player.x + (target.x - player.x) * player.speed;
+            let nextY = player.y + (target.y - player.y) * player.speed;
+            let collideX = false, collideY = false;
+            walls.forEach(w => {
+                if (nextX + player.radius > w.x && nextX - player.radius < w.x + w.w && player.y + player.radius > w.y && player.y - player.radius < w.y + w.h) collideX = true;
+                if (player.x + player.radius > w.x && player.x - player.radius < w.x + w.w && nextY + player.radius > w.y && nextY - player.radius < w.y + w.h) collideY = true;
+            });
+            if (!collideX) player.x = nextX; if (!collideY) player.y = nextY;
         }
+
+        hazards.forEach(h => {
+            h.x += h.vx; if (h.x < 0 || h.x > canvas.width - h.w) h.vx *= -1;
+            if (Math.hypot(player.x - (h.x + h.w/2), player.y - (h.y + h.h/2)) < 50 && player.stunned === 0) { player.stunned = 80; state = "idle"; }
+        });
 
         for (let key in stations) {
             let s = stations[key];
@@ -102,23 +225,15 @@
             if (dist < 70 && player.stunned === 0) {
                 if (key === 'pantry' && state === "idle") state = "carrying_raw";
                 if (key === 'trash' && state !== "idle") state = "idle";
-                
                 if (key === 'cooking_area' && state === "carrying_raw") {
-                    s.prg += 1.5;
-                    if (s.prg >= 100) { state = "carrying_food"; s.prg = 0; }
+                    s.prg += 2.0; if (s.prg >= 100) { state = "carrying_food"; s.prg = 0; }
                 } else if (key !== 'cooking_area') { stations.cooking_area.prg = 0; }
-                
                 if (key === 'dispenser' && state === "idle") {
-                    s.prg += 3.0;
-                    if (s.prg >= 100) { state = "carrying_drink"; s.prg = 0; }
+                    s.prg += 3.5; if (s.prg >= 100) { state = "carrying_drink"; s.prg = 0; }
                 } else if (key !== 'dispenser') { stations.dispenser.prg = 0; }
-                
                 if (key === 'table') {
                     let needed = orders[currentOrderIdx];
-                    let isCorrectFood = (state === "carrying_food" && needed === "mie");
-                    let isCorrectDrink = (state === "carrying_drink" && needed === "drink");
-
-                    if (isCorrectFood || isCorrectDrink) {
+                    if ((state === "carrying_food" && needed === "mie") || (state === "carrying_drink" && needed === "drink")) {
                         state = "idle"; score += 20; currentOrderIdx++;
                         document.getElementById('score').innerText = score;
                         if(currentOrderIdx >= orders.length) endGame(true);
@@ -132,75 +247,44 @@
 
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        // 1. BG
-        if (imgStatus.bg) {
-            let pattern = ctx.createPattern(images.bg, 'repeat');
-            ctx.fillStyle = pattern;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        if (imgStatus.bg) { ctx.fillStyle = ctx.createPattern(images.bg, 'repeat'); ctx.fillRect(0, 0, canvas.width, canvas.height); }
+        if (imgStatus.customer) ctx.drawImage(images.customer, canvas.width/2 - 60, 130, 130, 130);
+        if (imgStatus.table) ctx.drawImage(images.table, stations.table.x, stations.table.y, stations.table.w, stations.table.h);
+        if (imgStatus.trash) ctx.drawImage(images.trash, stations.trash.x, stations.trash.y, stations.trash.w, stations.trash.h);
+        let ca = stations.cooking_area;
+        if (imgStatus.kitchen_counter) ctx.drawImage(images.kitchen_counter, ca.x, ca.y, ca.w, ca.h);
+        if (imgStatus.stove) ctx.drawImage(images.stove, ca.x + 150, ca.y + 50, ca.w - 225, ca.h - 145);
+        hazards.forEach(h => { if (imgStatus.monkey) ctx.drawImage(images.monkey, h.x, h.y, h.w, h.h); });
+        
+        if(imgStatus.player) {
+            ctx.save(); if(player.stunned > 0) ctx.globalAlpha = 0.5;
+            ctx.drawImage(images.player, player.x - 65, player.y - 65, 130, 130);
+            let hK = null, iW = 40, iH = 40, oU = 90; 
+            if (state === "carrying_raw") { hK = 'raw_mie'; iW = 70; iH = 70; oU = 80; }
+            else if (state === "carrying_food") { hK = 'mie'; iW = 55; iH = 55; oU = 80; }
+            else if (state === "carrying_drink") { hK = 'drink'; iW = 35; iH = 45; oU = 95; }
+            if(hK && imgStatus[hK]) ctx.drawImage(images[hK], player.x - (iW/5), player.y - oU, iW, iH);
+            ctx.restore();
         }
 
-        // 2. Nathan (Bawah Meja)
-        if (imgStatus.customer) {
-            ctx.drawImage(images.customer, canvas.width/2 - 60, 130, 130, 130);
-        }
-
-        // 3. Stations
+        if (imgStatus.fridge) ctx.drawImage(images.fridge, stations.pantry.x, stations.pantry.y, stations.pantry.w, stations.pantry.h);
+        if (imgStatus.dispenser) ctx.drawImage(images.dispenser, stations.dispenser.x, stations.dispenser.y, stations.dispenser.w, stations.dispenser.h);
+        
         for (let key in stations) {
             let s = stations[key];
-            if (key === 'cooking_area') {
-                if (imgStatus.kitchen_counter) ctx.drawImage(images.kitchen_counter, s.x, s.y, s.w, s.h);
-                if (imgStatus.stove) ctx.drawImage(images.stove, s.x, s.y, s.w, s.h);
-            } else if (imgStatus[s.type]) {
-                ctx.drawImage(images[s.type], s.x, s.y, s.w, s.h);
-            }
             if(s.prg > 0) {
-                ctx.fillStyle = "white"; ctx.fillRect(s.x, s.y - 20, s.w, 10);
-                ctx.fillStyle = "#ff4d6d"; ctx.fillRect(s.x, s.y - 20, (s.prg/100)*s.w, 10);
+                ctx.fillStyle = "white"; ctx.fillRect(s.x + (s.w/4), s.y - 20, s.w/2, 10);
+                ctx.fillStyle = "#ff4d6d"; ctx.fillRect(s.x + (s.w/4), s.y - 20, (s.prg/100)*(s.w/2), 10);
             }
         }
-
-        // 4. Bubble (Pake Gambar Item)
         if(currentOrderIdx < orders.length) {
             if(imgStatus.bubble) ctx.drawImage(images.bubble, canvas.width/2 + 15, 65, 180, 180);
-            let itemKey = orders[currentOrderIdx];
-            if(imgStatus[itemKey]) {
-                ctx.drawImage(images[itemKey], canvas.width/2 + 95, 130, 40, 40);
-            }
-        }
-
-        // 5. Hazards
-        hazards.forEach(h => {
-            h.x += h.vx;
-            if (h.x < 0 || h.x > canvas.width - h.w) h.vx *= -1;
-            if(imgStatus.monkey) ctx.drawImage(images.monkey, h.x, h.y, h.w, h.h);
-            if (Math.hypot(player.x - (h.x + h.w/2), player.y - (h.y + h.h/2)) < 40 && player.stunned === 0) {
-                player.stunned = 60; state = "idle";
-            }
-        });
-
-        // 6. Player & Item Visual
-        if(imgStatus.player) {
-            ctx.save();
-            if(player.stunned > 0) ctx.globalAlpha = 0.5;
-            ctx.drawImage(images.player, player.x - 45, player.y - 45, 90, 90);
-            
-            // Logika custom gambar bahan di tangan
-            let holdingKey = null;
-            if (state === "carrying_raw") holdingKey = 'raw_mie';
-            else if (state === "carrying_food") holdingKey = 'mie';
-            else if (state === "carrying_drink") holdingKey = 'drink';
-
-            if(holdingKey && imgStatus[holdingKey]) {
-                ctx.drawImage(images[holdingKey], player.x - 20, player.y - 90, 40, 40);
-            }
-            ctx.restore();
+            let itemKey = orders[currentOrderIdx]; if(imgStatus[itemKey]) ctx.drawImage(images[itemKey], canvas.width/2 + 95, 130, 40, 40);
         }
     }
 
     function endGame(win) {
-        gameActive = false;
-        document.getElementById('overlay').style.display = "block";
+        gameActive = false; document.getElementById('overlay').style.display = "block";
         document.getElementById('msg-title').innerText = win ? "BERHASIL! 🏆" : "WAKTU HABIS!";
         document.getElementById('msg-desc').innerText = win ? "Nathan kenyang!" : "Coba lagi!";
     }
